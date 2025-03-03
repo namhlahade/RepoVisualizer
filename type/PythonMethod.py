@@ -6,5 +6,4 @@ class PythonMethod:
         self.lines:list[str] = []
         self.description:str = description
 
-        self.objects:list[dict[str,str]] = []
         self.calls:list = []

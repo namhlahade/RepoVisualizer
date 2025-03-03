@@ -7,7 +7,7 @@ class PythonParser:
     def __init__(self, file_path:str):
         self.file_path:str = file_path
         self.file = File(file_path)
-        self.objects:list[dict[str,str]] = []
+        self.objects:dict[str,str] = {}
 
         with open(self.file_path, 'r') as file:
             self.lines: list[str] = file.readlines()
@@ -60,21 +60,22 @@ class PythonParser:
                 self.file.add_class(class_)
             if line.startswith("from "):
                 imports = line[line.find("import ") + 7:].split(", ")
-                source = line[5:line.find(" import")]
+                source = line[5:line.find(" import")].strip()
                 self.objects[source] = "."
                 for import_ in imports:
                     if import_.__contains__(" as "):
-                        self.objects[import_[import_.find(" as ") + 4:]] = import_[:import_.find(" as ")]
-                        self.objects[import_[:import_.find(" as ")]] = source
+                        self.objects[import_[import_.find(" as ") + 4:].strip()] = import_[:import_.find(" as ")].strip()
+                        self.objects[import_[:import_.find(" as ")].strip()] = source
                     else:
-                        self.objects[import_] = source
+                        self.objects[import_.strip()] = source
             if line.startswith("import "):
                 imports = line[7:].split(", ")
                 for import_ in imports:
                     if import_.__contains__(" as "):
-                        self.objects[import_[import_.find(" as ") + 4:]] = import_[:import_.find(" as ")]
-                        self.objects[import_[:import_.find(" as ")]] = "."
+                        self.objects[import_[import_.find(" as ") + 4:].strip()] = import_[:import_.find(" as ")].strip()
+                        self.objects[import_[:import_.find(" as ")].strip()] = "."
                     else:
-                        self.objects[import_] = "."
+                        self.objects[import_.strip()] = "."
             self.lines.pop(0)
+        print(self.objects)
         return self.file
