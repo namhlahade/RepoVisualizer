@@ -18,4 +18,4 @@ def parse_repo(repo_path: str) -> list:
     return files
 
 if __name__ == '__main__':
-    print(parse_repo("C:\\Users\\ayonb\\Documents\\Programs\\HackathonProjectSearch"))
+    print(parse_repo("/Users/namhlahade/Documents/GitHub/DukeNutrition"))
