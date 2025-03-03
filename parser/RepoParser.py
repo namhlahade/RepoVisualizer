@@ -8,13 +8,13 @@ from parser.PythonParser import PythonParser
 
 def parse_repo(repo_path: str) -> list:
     files = []
-    for root, dirs, files in os.walk(repo_path):
-        for file in files:
-            file_path = os.path.join(root, file)
-            if file.endswith('.py'):
+
+    for root, dirs, filenames in os.walk(repo_path):
+        for filename in filenames:
+            file_path = os.path.join(root, filename)
+            if filename.endswith('.py'):
                 parser = PythonParser(file_path)
-                file = parser.parse_python()
-                files.append(file_path)
+                files.append(parser.parse_python())
     return files
 
 if __name__ == '__main__':

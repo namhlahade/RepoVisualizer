@@ -14,9 +14,9 @@ class PythonParser:
             self.lines: list[str] = file.readlines()
             self.file.add_lines(self.lines)
 
-    def _parse_class(self) -> tuple[PythonClass, list[str]]:
+    def _parse_class(self) -> PythonClass:
         dec_line = self.lines.pop(0)
-        class_name:str = dec_line[0].split(" ")[1].split("(")[0]
+        class_name:str = dec_line[dec_line.find("class ") + 6:dec_line.find("(")]
         print(class_name)
         description:str = ""
 
@@ -34,20 +34,21 @@ class PythonParser:
 
         class_lines:list[str] = []
         while len(self.lines) > 0:
-            line = self.lines.pop(0)
-            if line.startswith(("    ", "\t", " ", "\n")):
-                # remove the leading tab wether it is 4 spaces or a tab
-                print(len(line), end=", ")
-                print(len(line.lstrip()))
+            line = self.lines[0]
+            if line.startswith(("    ", "\t", "    ", "\n")):
+                class_lines.append(line[4:])
             else:
                 break
+            self.lines.pop(0)
 
 
     def parse_python(self) -> File:
         print(f"parsing {self.file_path}")
         # break the file into methods and classes
         while len(self.lines) > 0:
-            line = self.lines.pop(0)
+            line = self.lines[0]
             if line.startswith("class "):
-                class_, lines = self._parse_class()
+                class_ = self._parse_class()
                 self.file.add_class(class_)
+            self.lines.pop(0)
+        return self.file
