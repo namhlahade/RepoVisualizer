@@ -9,7 +9,6 @@ class PythonParser:
         self.file = File(file_path)
         self.objects:list[dict[str,str]] = []
 
-
         with open(self.file_path, 'r') as file:
             self.lines: list[str] = file.readlines()
             self.file.add_lines(self.lines)
@@ -37,9 +36,18 @@ class PythonParser:
             line = self.lines[0]
             if line.startswith(("    ", "\t", "    ", "\n")):
                 class_lines.append(line[4:])
+
             else:
                 break
             self.lines.pop(0)
+
+    def _parse_object(self, obj:str) -> str:
+        objs = obj.split(".")
+        while objs[0] in self.objects:
+            objs[0] = self.objects[objs[0]]
+            if objs[0] == ".":
+                break
+        return ".".join(objs)
 
 
     def parse_python(self) -> File:
@@ -50,5 +58,23 @@ class PythonParser:
             if line.startswith("class "):
                 class_ = self._parse_class()
                 self.file.add_class(class_)
+            if line.startswith("from "):
+                imports = line[line.find("import ") + 7:].split(", ")
+                source = line[5:line.find(" import")]
+                self.objects[source] = "."
+                for import_ in imports:
+                    if import_.__contains__(" as "):
+                        self.objects[import_[import_.find(" as ") + 4:]] = import_[:import_.find(" as ")]
+                        self.objects[import_[:import_.find(" as ")]] = source
+                    else:
+                        self.objects[import_] = source
+            if line.startswith("import "):
+                imports = line[7:].split(", ")
+                for import_ in imports:
+                    if import_.__contains__(" as "):
+                        self.objects[import_[import_.find(" as ") + 4:]] = import_[:import_.find(" as ")]
+                        self.objects[import_[:import_.find(" as ")]] = "."
+                    else:
+                        self.objects[import_] = "."
             self.lines.pop(0)
         return self.file
