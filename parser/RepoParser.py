@@ -4,7 +4,7 @@ calls the correct parser for each file in the repository based on the file exten
 :output: list of filenames
 """
 import os
-import PythonParser
+import parser.PythonParser
 
 def parse_repo(repo_path: str) -> list:
     filenames = []
@@ -12,7 +12,7 @@ def parse_repo(repo_path: str) -> list:
         for file in files:
             file_path = os.path.join(root, file)
             if file.endswith('.py'):
-                PythonParser.parse_python(file_path)
+                parser.PythonParser.parse_python(file_path)
                 filenames.append(file_path)
     return filenames
 
