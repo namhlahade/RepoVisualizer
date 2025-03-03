@@ -5,7 +5,6 @@ class PythonClass:
         self.lines:list[str] = []
         self.description:str = description
 
-        self.objects:list[dict[str,str]] = []
         self.calls:list = []
 
     def add_lines(self, lines):

@@ -4,17 +4,18 @@ calls the correct parser for each file in the repository based on the file exten
 :output: list of filenames
 """
 import os
-import parser.PythonParser
+from parser.PythonParser import PythonParser
 
 def parse_repo(repo_path: str) -> list:
-    filenames = []
+    files = []
     for root, dirs, files in os.walk(repo_path):
         for file in files:
             file_path = os.path.join(root, file)
             if file.endswith('.py'):
-                parser.PythonParser.parse_python(file_path)
-                filenames.append(file_path)
-    return filenames
+                parser = PythonParser(file_path)
+                file = parser.parse_python()
+                files.append(file_path)
+    return files
 
 if __name__ == '__main__':
     print(parse_repo("C:\\Users\\ayonb\\Documents\\Programs\\HackathonProjectSearch"))
