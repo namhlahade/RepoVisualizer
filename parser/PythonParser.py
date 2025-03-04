@@ -13,6 +13,15 @@ class PythonParser:
             self.lines: list[str] = file.readlines()
             self.file.add_lines(self.lines)
 
+
+    def _parse_object(self, obj:str) -> str:
+        objs = obj.split(".")
+        while objs[0] in self.objects:
+            objs[0] = self.objects[objs[0]]
+            if objs[0] == ".":
+                break
+        return ".".join(objs)
+
     def _parse_params(self, line:str) -> list[(str, str)]:
         params:list[(str, str)] = []
         start_params = line.find("(")
@@ -20,12 +29,35 @@ class PythonParser:
         if start_params != -1 and end_params != -1:
             param_strs = line[start_params + 1:end_params].split(", ")
             for param_str in param_strs:
+                if param_str.__contains__("="):
+                    param_str, obj = param_str.split("=")
+                    obj = self._parse_object(obj)
+                    self.objects[param_str] = obj
                 param = param_str.split(":")
                 if len(param) == 2:
                     params.append((param[1], param[0]))
                 else:
                     params.append((param[0], None))
         return params
+
+    def _parse_method(self, indent:int) -> PythonMethod:
+        dec_line = self.lines.pop(0)
+        method_end = dec_line.find("(")
+        method_name:str = dec_line[dec_line.find("def ") + 4:method_end]
+        print(f"parsing method {method_name}")
+        description:str = ""
+        params:list[(str, str)] = self._parse_params(dec_line)
+
+        method_lines:list[str] = []
+        while len(self.lines) > 0:
+            line = self.lines[0]
+            # remove indentation from the line given indent
+            if line.startswith(("    " * indent, "\n")):
+                method_lines.append(line[(indent + 1) * 4:])
+            else:
+                break
+            self.lines.pop(0)
+        return PythonMethod(method_name, description, params, method_lines)
 
     def _parse_class(self, indent:int) -> PythonClass:
         dec_line = self.lines.pop(0)
@@ -38,27 +70,20 @@ class PythonParser:
         class_lines:list[str] = []
         while len(self.lines) > 0:
             line = self.lines[0]
-            if line.startswith(("    ", "\t", "    ", "\n")):
-                class_lines.append(line[4:])
+            # remove indentation from the line given indent
+            if line.startswith(("    " * (indent + 1), "\n")):
+                class_lines.append(line[(indent + 1) * 4:])
                 if line.__contains__("def "):
-                    method = self._parse_method(line)
-                    self.file.add_method(method)
+                    # method = self._parse_method(line)
+                    # self.file.add_method(method, indent + 1)
+                    print("method")
                 elif line.__contains__("class "):
-                    class_ = self._parse_class()
+                    class_ = self._parse_class(indent + 1)
                     self.file.add_class(class_)
 
             else:
                 break
             self.lines.pop(0)
-
-    def _parse_object(self, obj:str) -> str:
-        objs = obj.split(".")
-        while objs[0] in self.objects:
-            objs[0] = self.objects[objs[0]]
-            if objs[0] == ".":
-                break
-        return ".".join(objs)
-
 
     def parse_python(self) -> File:
         print(f"parsing {self.file_path}")
@@ -66,11 +91,11 @@ class PythonParser:
         while len(self.lines) > 0:
             line = self.lines[0]
             if line.startswith("class "):
-                class_ = self._parse_class()
+                class_ = self._parse_class(0)
                 self.file.add_class(class_)
             if line.startswith("from "):
-                imports = line[line.find("import ") + 7:].split(", ")
                 source = line[5:line.find(" import")].strip()
+                imports = line[line.find("import ") + 7:].split(", ")
                 self.objects[source] = "."
                 for import_ in imports:
                     if import_.__contains__(" as "):
