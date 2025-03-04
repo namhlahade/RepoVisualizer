@@ -51,7 +51,6 @@ class PythonParser:
         method_lines:list[str] = []
         while len(self.lines) > 0:
             line = self.lines[0]
-            # remove indentation from the line given indent
             if line.startswith(("    " * indent, "\n")):
                 method_lines.append(line[(indent + 1) * 4:])
             else:
@@ -70,7 +69,6 @@ class PythonParser:
         class_lines:list[str] = []
         while len(self.lines) > 0:
             line = self.lines[0]
-            # remove indentation from the line given indent
             if line.startswith(("    " * (indent + 1), "\n")):
                 class_lines.append(line[(indent + 1) * 4:])
                 if line.__contains__("def "):
