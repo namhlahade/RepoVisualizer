@@ -4,6 +4,7 @@ from type.PythonClass import PythonClass
 from type.PythonMethod import PythonMethod
 
 class PythonParser:
+    # todo: need to find function calls
     def __init__(self, file_path:str):
         self.file_path:str = file_path
         self.file = File(file_path)
@@ -15,6 +16,7 @@ class PythonParser:
 
 
     def _parse_object(self, obj:str) -> str:
+        # todo: need to handle nested objects
         obj = obj.strip()
         print("----parsing object", obj)
 
@@ -148,4 +150,5 @@ class PythonParser:
                 self.lines.pop(0)
             else:
                 self._parse_line("", 0)
+        print("found objects", self.objects)
         return self.file
