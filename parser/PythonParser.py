@@ -72,11 +72,11 @@ class PythonParser:
         print(current_name, line, end="")
         if line.__contains__("def "):
             # handle method
-            method = self._parse_method(current_name, indent + 1)
+            method = self._parse_method(current_name, indent)
             self.file.add_method(method)
         elif line.__contains__("class "):
             # handle class
-            class_ = self._parse_class(current_name, indent + 1)
+            class_ = self._parse_class(current_name, indent)
             self.file.add_class(class_)
         else:
             self.lines.pop(0)
@@ -88,7 +88,6 @@ class PythonParser:
         print("--parsing method", method_name)
         description:str = ""
         params:list[(str, str)] = self._parse_params(dec_line)
-        print("---params", params)
 
         # iterate through method lines
         method_lines:list[str] = []
@@ -97,7 +96,7 @@ class PythonParser:
             # check if line is part of method
             if line.startswith(("    " * (indent + 1), "\n")):
                 method_lines.append(line[(indent + 1) * 4:])
-                self._parse_line(method_name, indent)
+                self._parse_line(method_name, indent + 1)
             else:
                 break
         return PythonMethod(method_name, description, params, method_lines)
@@ -115,10 +114,11 @@ class PythonParser:
         while len(self.lines) > 0:
             line = self.lines[0]
             # iterate through class lines
-            if line.startswith(("    " * (indent + 1), "\n")):
+            if line.startswith(("   " * (indent + 1), "\n")):
                 class_lines.append(line[(indent + 1) * 4:])
                 self._parse_line(class_name, indent + 1)
             else:
+                print("breaking on this line", line, "cause i want indent", indent)
                 break
 
     def parse_python(self) -> File:
