@@ -16,7 +16,7 @@ class PythonParser:
 
     def _parse_object(self, obj:str) -> str:
         obj = obj.strip()
-        print("parsing object", obj)
+        print("----parsing object", obj)
 
         # check if the parent object has already been parsed
         objs = obj.split(".")
@@ -40,6 +40,7 @@ class PythonParser:
         if start_params != -1 and end_params != -1:
             # iterate through each param
             param_strs = line[start_params + 1:end_params].split(", ")
+            print("---parsing params", param_strs)
             for param_str in param_strs:
                 param_str = param_str.strip()
 
@@ -64,12 +65,11 @@ class PythonParser:
                 obj = obj.strip()
                 params.append((param, type_))
                 self.objects[param] = obj
-        print(self.objects, params)
         return params
 
     def _parse_line(self, current_name:str, indent:int):
         line = self.lines[0]
-        print(line)
+        print(current_name, line, end="")
         if line.__contains__("def "):
             # handle method
             method = self._parse_method(current_name, indent + 1)
@@ -85,17 +85,17 @@ class PythonParser:
     def _parse_method(self, current_name:str, indent:int) -> PythonMethod:
         dec_line = self.lines.pop(0)
         method_name:str = current_name + "." + dec_line[dec_line.find("def ") + 4:dec_line.find("(")]
-        print(f"---parsing method {method_name}")
+        print("--parsing method", method_name)
         description:str = ""
         params:list[(str, str)] = self._parse_params(dec_line)
-        print("params", params)
+        print("---params", params)
 
         # iterate through method lines
         method_lines:list[str] = []
         while len(self.lines) > 0:
             line = self.lines[0]
             # check if line is part of method
-            if line.startswith(("    " * indent, "\n")):
+            if line.startswith(("    " * (indent + 1), "\n")):
                 method_lines.append(line[(indent + 1) * 4:])
                 self._parse_line(method_name, indent)
             else:
@@ -106,7 +106,7 @@ class PythonParser:
         dec_line = self.lines.pop(0)
         class_end = min(i for i in (dec_line.find("("), dec_line.find(":")) if i != -1)
         class_name:str = ".".join((current_name, dec_line[dec_line.find("class ") + 6:class_end]))
-        print(f"-parsing class {class_name}")
+        print("-parsing class", class_name)
         description:str = ""
         params:list[(str, str)] = self._parse_params(dec_line)
 
