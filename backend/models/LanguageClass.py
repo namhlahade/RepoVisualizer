@@ -14,5 +14,5 @@ class LanguageClass:
     def get_methods(self) -> list[LanguageMethod]: # type: ignore
         return self.methods
 
-    def add_methods(self, methods:list[LanguageMethod]) -> None: # type: ignore
+    def add_methods(self, methods:LanguageMethod) -> None: # type: ignore
         self.methods.append(methods)

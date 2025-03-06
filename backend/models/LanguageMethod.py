@@ -19,5 +19,5 @@ class LanguageMethod:
     def get_parameters(self) -> list[str]:
         return self.parameters
     
-    def add_parameters(self, parameters:list[str]) -> None:
+    def add_parameters(self, parameters:str) -> None:
         self.parameters.append(parameters)
