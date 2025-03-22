@@ -9,6 +9,7 @@ class PythonParser:
         self.file_path:str = file_path
         self.file = File(file_path)
         self.objects:dict[str,str] = {}
+        self.scope:list[PythonClass|PythonMethod|str] = ["."]
 
         with open(self.file_path, 'r') as file:
             self.lines: list[str] = file.readlines()
@@ -69,27 +70,28 @@ class PythonParser:
                 self.objects[param] = obj
         return params
 
-    def _parse_line(self, current_name:str, indent:int):
+    def _parse_line(self, indent:int):
         line = self.lines[0]
-        print(current_name, line, end="")
+        print(self.scope[-1], line, end="")
         if line.__contains__("def "):
             # handle method
-            method = self._parse_method(current_name, indent)
+            method = self._parse_method(indent)
             self.file.add_method(method)
         elif line.__contains__("class "):
             # handle class
-            class_ = self._parse_class(current_name, indent)
+            class_ = self._parse_class(indent)
             self.file.add_class(class_)
         else:
             self.lines.pop(0)
 
 
-    def _parse_method(self, current_name:str, indent:int) -> PythonMethod:
+    def _parse_method(self, indent:int) -> PythonMethod:
         dec_line = self.lines.pop(0)
-        method_name:str = current_name + "." + dec_line[dec_line.find("def ") + 4:dec_line.find("(")]
+        method_name:str = self.scope[-1] + "." + dec_line[dec_line.find("def ") + 4:dec_line.find("(")]
         print("--parsing method", method_name)
         description:str = ""
         params:list[(str, str)] = self._parse_params(dec_line)
+        self.scope.append(method_name)
 
         # iterate through method lines
         method_lines:list[str] = []
@@ -98,18 +100,20 @@ class PythonParser:
             # check if line is part of method
             if line.startswith(("    " * (indent + 1), "\n")):
                 method_lines.append(line[(indent + 1) * 4:])
-                self._parse_line(method_name, indent + 1)
+                self._parse_line(indent + 1)
             else:
+                self.scope.pop()
                 break
         return PythonMethod(method_name, description, params, method_lines)
 
-    def _parse_class(self, current_name:str, indent:int) -> PythonClass:
+    def _parse_class(self, indent:int) -> PythonClass:
         dec_line = self.lines.pop(0)
         class_end = min(i for i in (dec_line.find("("), dec_line.find(":")) if i != -1)
-        class_name:str = ".".join((current_name, dec_line[dec_line.find("class ") + 6:class_end]))
+        class_name:str = self.scope[-1] + "." + dec_line[dec_line.find("class ") + 6:class_end]
         print("-parsing class", class_name)
         description:str = ""
         params:list[(str, str)] = self._parse_params(dec_line)
+        self.scope.append(class_name)
 
         # iterate through class lines
         class_lines:list[str] = []
@@ -117,8 +121,11 @@ class PythonParser:
             line = self.lines[0]
             # iterate through class lines
             if line.startswith(("   " * (indent + 1), "\n")):
+                # todo: just need to check if the line is a method, class or other
+                # if its other then its basically part of init
+                # todo: get info from init method to add to class params
                 class_lines.append(line[(indent + 1) * 4:])
-                self._parse_line(class_name, indent + 1)
+                self._parse_line(indent + 1)
             else:
                 print("breaking on this line", line, "cause i want indent", indent)
                 break
@@ -149,6 +156,6 @@ class PythonParser:
                         self.objects[import_.strip()] = "."
                 self.lines.pop(0)
             else:
-                self._parse_line("", 0)
+                self._parse_line(0)
         print("found objects", self.objects)
         return self.file
