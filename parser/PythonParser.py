@@ -127,7 +127,7 @@ class PythonParser:
                 class_lines.append(line[(indent + 1) * 4:])
                 self._parse_line(indent + 1)
             else:
-                print("breaking on this line", line, "cause i want indent", indent)
+                self.scope.pop()
                 break
 
     def parse_python(self) -> File:
