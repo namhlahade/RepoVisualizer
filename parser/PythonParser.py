@@ -74,6 +74,7 @@ class PythonParser:
         line = self.lines[0]
         print(self.scope[-1], line, end="")
         line = line.split("#")[0]
+        # todo: handel doc strings (remember need to look for both " and ' and need to keep track of which is being used to look for the closing quotes)
         if line.__contains__("def "):
             # handle method
             method = self._parse_method(indent)
