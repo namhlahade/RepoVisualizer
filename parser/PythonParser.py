@@ -73,6 +73,7 @@ class PythonParser:
     def _parse_line(self, indent:int):
         line = self.lines[0]
         print(self.scope[-1], line, end="")
+        line = line.split("#")[0]
         if line.__contains__("def "):
             # handle method
             method = self._parse_method(indent)
