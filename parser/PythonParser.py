@@ -107,9 +107,9 @@ class PythonParser:
                     line = line[double_ind + 3:]
         elif self.doc_string != None:
             # ignoring the inside of the doc string
-            self.line.pop(0)
+            self.lines.pop(0)
 
-        if line.__contains__("def "):
+        elif line.__contains__("def "):
             # handle method
             method = self._parse_method(indent)
             self.file.add_method(method)
