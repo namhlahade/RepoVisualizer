@@ -37,6 +37,8 @@ class PythonParser:
         return ".".join(objs)
 
     def _parse_params(self, line:str) -> list[(str, str)]:
+        # todo: need to handle nested params
+        # todo: need to handele multiline params
         params:list[(str, str)] = []
 
         # find params between parentheses
@@ -79,13 +81,22 @@ class PythonParser:
         # todo: handel doc strings (remember need to look for both " and ' and need to keep track of which is being used to look for the closing quotes)
         # find the index of the starting quote then ignore the rest of that line
         # ignore each other line until the corresponding closing quote is found
+        # there also could be multiple doc strings in one line
+        # and you cant just throw out the line cause there could be params in it
+        # or i guess then it would be handeled by the param func and not here
+
         if line.__contains__("'''") or line.__contains__('"""'):
             single_ind = line.find("'''")
             double_ind = line.find('"""')
             if single_ind != -1 and (double_ind == -1 or single_ind < double_ind):
                 # handle single quotes
-                line = line[:single_ind] + line[single_ind + 3:]
-                self.doc_string = "'''"
+                if self.doc_string == "'''":
+                    self.doc_string = None
+                    self.lines.pop(0)
+                else:
+                    self.doc_string = "'''"
+                    line = line[single_ind + 3:]
+
         if line.__contains__("def "):
             # handle method
             method = self._parse_method(indent)
