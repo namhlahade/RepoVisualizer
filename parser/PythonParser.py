@@ -122,6 +122,7 @@ class PythonParser:
         while len(self.lines) > 0:
             line = self.lines[0]
             # check if line is part of method
+            # todo: if the method was called in some control block then the number of indents will be messed up
             if line.startswith(("    " * (indent + 1), "\n")):
                 method_lines.append(line[(indent + 1) * 4:])
                 self._parse_line(indent + 1)
@@ -144,8 +145,8 @@ class PythonParser:
         while len(self.lines) > 0:
             line = self.lines[0]
             # iterate through class lines
+            # todo: if the class was called in some control block then the number of indents will be messed up
             if line.startswith(("   " * (indent + 1), "\n")):
-                # todo: just need to check if the line is a method, class or other
                 # if its other then its basically part of init
                 # todo: get info from init method to add to class params
                 class_lines.append(line[(indent + 1) * 4:])
