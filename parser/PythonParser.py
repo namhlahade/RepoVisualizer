@@ -9,7 +9,9 @@ class PythonParser:
         self.file_path:str = file_path
         self.file = File(file_path)
         self.objects:dict[str,str] = {}
+        # todo: need to store number of indents with the name to know when to pop each scope
         self.scope:list[PythonClass|PythonMethod|str] = ["."]
+        self.doc_string = None
 
         with open(self.file_path, 'r') as file:
             self.lines: list[str] = file.readlines()
@@ -75,6 +77,15 @@ class PythonParser:
         print(self.scope[-1], line, end="")
         line = line.split("#")[0]
         # todo: handel doc strings (remember need to look for both " and ' and need to keep track of which is being used to look for the closing quotes)
+        # find the index of the starting quote then ignore the rest of that line
+        # ignore each other line until the corresponding closing quote is found
+        if line.__contains__("'''") or line.__contains__('"""'):
+            single_ind = line.find("'''")
+            double_ind = line.find('"""')
+            if single_ind != -1 and (double_ind == -1 or single_ind < double_ind):
+                # handle single quotes
+                line = line[:single_ind] + line[single_ind + 3:]
+                self.doc_string = "'''"
         if line.__contains__("def "):
             # handle method
             method = self._parse_method(indent)
