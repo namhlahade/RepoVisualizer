@@ -75,10 +75,11 @@ class PythonParser:
         return params
 
     def _parse_line(self, indent:int):
+        # todo: handle ;
         line = self.lines[0]
         print(self.scope[-1], line, end="")
         line = line.split("#")[0]
-        # todo: handel doc strings (remember need to look for both " and ' and need to keep track of which is being used to look for the closing quotes)
+        # todo: handle doc strings (remember need to look for both " and ' and need to keep track of which is being used to look for the closing quotes)
         # find the index of the starting quote then ignore the rest of that line
         # ignore each other line until the corresponding closing quote is found
         # there also could be multiple doc strings in one line
@@ -96,6 +97,17 @@ class PythonParser:
                 else:
                     self.doc_string = "'''"
                     line = line[single_ind + 3:]
+            elif double_ind != -1 and (single_ind == -1 or double_ind < single_ind):
+                # handle double quotes
+                if self.doc_string == '"""':
+                    self.doc_string = None
+                    self.lines.pop(0)
+                else:
+                    self.doc_string = '"""'
+                    line = line[double_ind + 3:]
+        elif self.doc_string != None:
+            # ignoring the inside of the doc string
+            self.line.pop(0)
 
         if line.__contains__("def "):
             # handle method
