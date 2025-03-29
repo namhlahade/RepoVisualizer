@@ -9,7 +9,9 @@ class PythonParser:
         self.file_path:str = file_path
         self.file = File(file_path)
         self.objects:dict[str,str] = {}
+        # todo: need to store number of indents with the name to know when to pop each scope
         self.scope:list[PythonClass|PythonMethod|str] = ["."]
+        self.doc_string = None
 
         with open(self.file_path, 'r') as file:
             self.lines: list[str] = file.readlines()
@@ -35,6 +37,8 @@ class PythonParser:
         return ".".join(objs)
 
     def _parse_params(self, line:str) -> list[(str, str)]:
+        # todo: need to handle nested params
+        # todo: need to handele multiline params
         params:list[(str, str)] = []
 
         # find params between parentheses
@@ -71,9 +75,41 @@ class PythonParser:
         return params
 
     def _parse_line(self, indent:int):
+        # todo: handle ;
         line = self.lines[0]
         print(self.scope[-1], line, end="")
-        if line.__contains__("def "):
+        line = line.split("#")[0]
+        # todo: handle doc strings (remember need to look for both " and ' and need to keep track of which is being used to look for the closing quotes)
+        # find the index of the starting quote then ignore the rest of that line
+        # ignore each other line until the corresponding closing quote is found
+        # there also could be multiple doc strings in one line
+        # and you cant just throw out the line cause there could be params in it
+        # or i guess then it would be handeled by the param func and not here
+
+        if line.__contains__("'''") or line.__contains__('"""'):
+            single_ind = line.find("'''")
+            double_ind = line.find('"""')
+            if single_ind != -1 and (double_ind == -1 or single_ind < double_ind):
+                # handle single quotes
+                if self.doc_string == "'''":
+                    self.doc_string = None
+                    self.lines.pop(0)
+                else:
+                    self.doc_string = "'''"
+                    line = line[single_ind + 3:]
+            elif double_ind != -1 and (single_ind == -1 or double_ind < single_ind):
+                # handle double quotes
+                if self.doc_string == '"""':
+                    self.doc_string = None
+                    self.lines.pop(0)
+                else:
+                    self.doc_string = '"""'
+                    line = line[double_ind + 3:]
+        elif self.doc_string != None:
+            # ignoring the inside of the doc string
+            self.lines.pop(0)
+
+        elif line.__contains__("def "):
             # handle method
             method = self._parse_method(indent)
             self.file.add_method(method)
@@ -98,6 +134,7 @@ class PythonParser:
         while len(self.lines) > 0:
             line = self.lines[0]
             # check if line is part of method
+            # todo: if the method was called in some control block then the number of indents will be messed up
             if line.startswith(("    " * (indent + 1), "\n")):
                 method_lines.append(line[(indent + 1) * 4:])
                 self._parse_line(indent + 1)
@@ -120,8 +157,8 @@ class PythonParser:
         while len(self.lines) > 0:
             line = self.lines[0]
             # iterate through class lines
+            # todo: if the class was called in some control block then the number of indents will be messed up
             if line.startswith(("   " * (indent + 1), "\n")):
-                # todo: just need to check if the line is a method, class or other
                 # if its other then its basically part of init
                 # todo: get info from init method to add to class params
                 class_lines.append(line[(indent + 1) * 4:])
